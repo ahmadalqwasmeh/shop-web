@@ -59,8 +59,10 @@ export default function StockPage() {
       <p style={{ marginTop: 12, color: "#666" }}>
         افتح الرابط: <b>/stock</b>
       </p>
-        <RequireAuth>
+        
     </div>
+        <RequireAuth>
   );
 }
+
 
