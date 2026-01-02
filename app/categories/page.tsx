@@ -104,8 +104,10 @@ export default function CategoriesPage() {
       <p style={{ marginTop: 12, color: "#666" }}>
         افتح الرابط: <b>/categories</b>
       </p>
-        <RequireAuth>
+        
     </div>
+        <RequireAuth>
   );
 }
+
 
