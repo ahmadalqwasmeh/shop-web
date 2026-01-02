@@ -61,8 +61,9 @@ export default function StockPage() {
       </p>
         
     </div>
-        <RequireAuth>
+        </RequireAuth>
   );
 }
+
 
 
