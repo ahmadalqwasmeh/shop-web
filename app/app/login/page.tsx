@@ -9,16 +9,27 @@ export default function LoginPage() {
 
   async function login() {
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
-    if (error) return alert(error.message);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     window.location.href = "/categories";
   }
 
   return (
-    <div style={{ padding: 20, direction: "rtl", maxWidth: 420, margin: "40px auto" }}>
+    <div
+      style={{
+        padding: 20,
+        direction: "rtl",
+        maxWidth: 420,
+        margin: "40px auto",
+      }}
+    >
       <h1 style={{ fontSize: 24, fontWeight: "bold" }}>تسجيل الدخول</h1>
 
       <input
@@ -38,10 +49,21 @@ export default function LoginPage() {
 
       <button
         onClick={login}
-        style={{ width: "100%", padding: 12, marginTop: 12, cursor: "pointer" }}
+        style={{
+          width: "100%",
+          padding: 12,
+          marginTop: 12,
+          cursor: "pointer",
+          borderRadius: 8,
+          border: "1px solid #000",
+        }}
       >
         دخول
       </button>
+
+      <p style={{ marginTop: 10, color: "#777", fontSize: 14 }}>
+        إذا واجهت خطأ، تأكد من الإيميل/كلمة المرور ومن أن Variables في Vercel صحيحة.
+      </p>
     </div>
   );
 }
