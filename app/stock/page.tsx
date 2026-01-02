@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import RequireAuth from "../RequireAuth";
 
 type StockRow = {
   product_id: number;
@@ -32,6 +33,7 @@ export default function StockPage() {
   }, []);
 
   return (
+      <RequireAuth>
     <div style={{ padding: 20, direction: "rtl" }}>
       <h1 style={{ fontSize: 24, fontWeight: "bold" }}>المخزون الحالي</h1>
 
@@ -57,6 +59,8 @@ export default function StockPage() {
       <p style={{ marginTop: 12, color: "#666" }}>
         افتح الرابط: <b>/stock</b>
       </p>
+        <RequireAuth>
     </div>
   );
 }
+
