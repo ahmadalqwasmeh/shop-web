@@ -23,13 +23,15 @@ export default function CategoriesPage() {
       .select("*")
       .order("id", { ascending: true });
 
-    if (error) return alert(error.message);
-    if (data) setRows(data as Category[]);
+    if (!error && data) setRows(data as Category[]);
   }
 
   async function addCategory() {
     const p = prefix.trim().toUpperCase();
-    if (!nameAr.trim() || !p) return alert("اكتب اسم الفئة و Prefix");
+    if (!nameAr.trim() || !p) {
+      alert("اكتب اسم الفئة و Prefix");
+      return;
+    }
 
     const { error } = await supabase.from("categories").insert({
       name_ar: nameAr.trim(),
@@ -38,11 +40,19 @@ export default function CategoriesPage() {
       is_active: true,
     });
 
-    if (error) return alert(error.message);
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     setNameAr("");
     setPrefix("");
     load();
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
   }
 
   useEffect(() => {
@@ -52,6 +62,20 @@ export default function CategoriesPage() {
   return (
     <RequireAuth>
       <div style={{ padding: 20, direction: "rtl" }}>
+        {/* زر تسجيل الخروج */}
+        <button
+          onClick={logout}
+          style={{
+            padding: "8px 14px",
+            borderRadius: 8,
+            border: "1px solid #000",
+            cursor: "pointer",
+            marginBottom: 16,
+          }}
+        >
+          تسجيل خروج
+        </button>
+
         <h1 style={{ fontSize: 24, fontWeight: 700 }}>الفئات</h1>
 
         <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -61,12 +85,14 @@ export default function CategoriesPage() {
             onChange={(e) => setNameAr(e.target.value)}
             style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}
           />
+
           <input
             placeholder="Prefix مثل TBN"
             value={prefix}
             onChange={(e) => setPrefix(e.target.value)}
             style={{ padding: 10, border: "1px solid #ccc", borderRadius: 8 }}
           />
+
           <button
             onClick={addCategory}
             style={{
@@ -80,23 +106,45 @@ export default function CategoriesPage() {
           </button>
         </div>
 
-        <table style={{ width: "100%", marginTop: 16, borderCollapse: "collapse" }}>
+        <table
+          style={{
+            width: "100%",
+            marginTop: 16,
+            borderCollapse: "collapse",
+          }}
+        >
           <thead>
             <tr>
               <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>#</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>الاسم</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>Prefix</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>الترقيم القادم</th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>مفعّلة</th>
+              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>
+                الاسم
+              </th>
+              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>
+                Prefix
+              </th>
+              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>
+                الترقيم القادم
+              </th>
+              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>
+                مفعّلة
+              </th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>{r.id}</td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>{r.name_ar}</td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>{r.prefix}</td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>{r.next_seq}</td>
+                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
+                  {r.id}
+                </td>
+                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
+                  {r.name_ar}
+                </td>
+                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
+                  {r.prefix}
+                </td>
+                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
+                  {r.next_seq}
+                </td>
                 <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
                   {r.is_active ? "نعم" : "لا"}
                 </td>
