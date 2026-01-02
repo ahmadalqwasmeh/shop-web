@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import RequireAuth from "../RequireAuth";
+
 
 type Product = {
   id: number;
@@ -132,6 +134,7 @@ export default function SalePage() {
   }
 
   return (
+      <RequireAuth>
     <div style={{ padding: 20, direction: "rtl" }}>
       <h1 style={{ fontSize: 24, fontWeight: "bold" }}>فاتورة بيع (صادر)</h1>
 
@@ -166,6 +169,7 @@ export default function SalePage() {
         <button onClick={addLine} style={{ padding: "10px 14px", cursor: "pointer" }}>
           إضافة للفاتورة
         </button>
+          <RequireAuth>
       </div>
 
       <div style={{ marginTop: 16 }}>
@@ -223,3 +227,4 @@ export default function SalePage() {
     </div>
   );
 }
+
