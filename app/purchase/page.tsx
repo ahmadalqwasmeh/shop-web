@@ -1,3 +1,129 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import RequireAuth from "../RequireAuth";
+
+type Product = {
+  id: number;
+  name_ar: string;
+  sku: string;
+  purchase_price: number;
+};
+
+type Line = {
+  product_id: number;
+  sku: string;
+  name_ar: string;
+  qty: number;
+  price: number;
+};
+
+export default function PurchasePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [lines, setLines] = useState<Line[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<number | "">("");
+  const [qty, setQty] = useState<string>("1");
+  const [price, setPrice] = useState<string>("0");
+  const [notes, setNotes] = useState<string>("");
+
+  async function loadProducts() {
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, name_ar, sku, purchase_price")
+      .eq("is_active", true)
+      .order("id", { ascending: false });
+
+    if (error) return alert(error.message);
+    setProducts((data ?? []) as Product[]);
+  }
+
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === selectedProductId),
+    [products, selectedProductId]
+  );
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    if (selectedProduct) setPrice(String(selectedProduct.purchase_price ?? 0));
+  }, [selectedProduct]);
+
+  function addLine() {
+    if (!selectedProduct) return alert("اختر صنف");
+    const q = Number(qty);
+    const pr = Number(price);
+    if (!Number.isFinite(q) || q <= 0) return alert("الكمية لازم تكون رقم أكبر من 0");
+    if (!Number.isFinite(pr) || pr < 0) return alert("السعر غير صحيح");
+
+    setLines((prev) => [
+      ...prev,
+      {
+        product_id: selectedProduct.id,
+        sku: selectedProduct.sku,
+        name_ar: selectedProduct.name_ar,
+        qty: q,
+        price: pr,
+      },
+    ]);
+
+    setSelectedProductId("");
+    setQty("1");
+    setPrice("0");
+  }
+
+  function removeLine(index: number) {
+    setLines((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  const total = useMemo(() => lines.reduce((sum, l) => sum + l.qty * l.price, 0), [lines]);
+
+  async function saveInvoice() {
+    if (lines.length === 0) return alert("أضف أصناف للفاتورة أولًا");
+
+    const { data: inv, error: invErr } = await supabase
+      .from("invoices")
+      .insert({
+        type: "PURCHASE",
+        discount: 0,
+        total,
+        notes: notes || null,
+      })
+      .select("id")
+      .single();
+
+    if (invErr) return alert(invErr.message);
+    const invoiceId = inv.id;
+
+    const itemsPayload = lines.map((l) => ({
+      invoice_id: invoiceId,
+      product_id: l.product_id,
+      qty: l.qty,
+      price: l.price,
+    }));
+
+    const { error: itemsErr } = await supabase.from("invoice_items").insert(itemsPayload);
+    if (itemsErr) return alert(itemsErr.message);
+
+    const movesPayload = lines.map((l) => ({
+      product_id: l.product_id,
+      movement_type: "IN",
+      qty: l.qty,
+      ref_type: "invoice",
+      ref_id: invoiceId,
+    }));
+
+    const { error: moveErr } = await supabase.from("stock_movements").insert(movesPayload);
+    if (moveErr) return alert(moveErr.message);
+
+    alert("تم حفظ فاتورة الشراء رقم: " + invoiceId);
+
+    setLines([]);
+    setNotes("");
+  }
+
   return (
     <RequireAuth>
       <div style={{ padding: 20, direction: "rtl" }}>
@@ -6,9 +132,7 @@
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
           <select
             value={selectedProductId}
-            onChange={(e) =>
-              setSelectedProductId(e.target.value ? Number(e.target.value) : "")
-            }
+            onChange={(e) => setSelectedProductId(e.target.value ? Number(e.target.value) : "")}
             style={{ padding: 10 }}
           >
             <option value="">اختر الصنف</option>
@@ -23,14 +147,7 @@
             placeholder="الكمية"
             value={qty}
             onChange={(e) => setQty(e.target.value)}
-ليق الـ return وإغلاق `</RequireAuth>` على السطر الصحيح مباشرة بعد `</div>` وليس قبلها.
-
----
-
-**ملاحظة**: أنا قصّيت الكود هنا؟ لا، لازم أكمله كاملًا جاهز للنسخ. أكمل:
-
-```tsx
-          style={{ padding: 10, width: 120 }}
+            style={{ padding: 10, width: 120 }}
           />
 
           <input
@@ -100,3 +217,4 @@
       </div>
     </RequireAuth>
   );
+}
