@@ -171,7 +171,7 @@ export default function SalePage() {
         </button>
           
       </div>
-<RequireAuth>
+</RequireAuth>
       <div style={{ marginTop: 16 }}>
         <textarea
           placeholder="ملاحظات (اختياري)"
@@ -227,5 +227,6 @@ export default function SalePage() {
     </div>
   );
 }
+
 
 
