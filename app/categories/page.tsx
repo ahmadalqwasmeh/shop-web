@@ -106,8 +106,9 @@ export default function CategoriesPage() {
       </p>
         
     </div>
-        <RequireAuth>
+        </RequireAuth>
   );
 }
+
 
 
