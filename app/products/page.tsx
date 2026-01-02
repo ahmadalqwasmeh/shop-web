@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import RequireAuth from "../RequireAuth";
 
 type Category = {
   id: number;
@@ -93,6 +94,7 @@ export default function ProductsPage() {
   }, []);
 
   return (
+      <RequireAuth>
     <div style={{ padding: 20, direction: "rtl" }}>
       <h1 style={{ fontSize: 24, fontWeight: "bold" }}>الأصناف</h1>
 
@@ -136,6 +138,7 @@ export default function ProductsPage() {
         />
 
         <button onClick={addProduct}>إضافة صنف</button>
+          <RequireAuth>
       </div>
 
       <table style={{ width: "100%", marginTop: 20 }}>
@@ -163,3 +166,4 @@ export default function ProductsPage() {
     </div>
   );
 }
+
