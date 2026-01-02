@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import RequireAuth from "../RequireAuth";
+
 
 type Category = {
   id: number;
@@ -44,6 +46,7 @@ export default function CategoriesPage() {
   }, []);
 
   return (
+      <RequireAuth>
     <div style={{ padding: 20, direction: "rtl" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700 }}>الفئات</h1>
 
@@ -101,6 +104,8 @@ export default function CategoriesPage() {
       <p style={{ marginTop: 12, color: "#666" }}>
         افتح الرابط: <b>/categories</b>
       </p>
+        <RequireAuth>
     </div>
   );
 }
+
