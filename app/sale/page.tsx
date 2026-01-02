@@ -169,9 +169,9 @@ export default function SalePage() {
         <button onClick={addLine} style={{ padding: "10px 14px", cursor: "pointer" }}>
           إضافة للفاتورة
         </button>
-          <RequireAuth>
+          
       </div>
-
+<RequireAuth>
       <div style={{ marginTop: 16 }}>
         <textarea
           placeholder="ملاحظات (اختياري)"
@@ -227,4 +227,5 @@ export default function SalePage() {
     </div>
   );
 }
+
 
