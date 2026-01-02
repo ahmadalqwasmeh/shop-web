@@ -1,3 +1,91 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import RequireAuth from "../RequireAuth";
+
+type Category = {
+  id: number;
+  name_ar: string;
+  prefix: string;
+};
+
+type Product = {
+  id: number;
+  name_ar: string;
+  sku: string;
+  purchase_price: number;
+  sale_price: number;
+  min_stock: number;
+};
+
+export default function ProductsPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  const [nameAr, setNameAr] = useState("");
+  const [categoryId, setCategoryId] = useState<number | "">("");
+  const [purchasePrice, setPurchasePrice] = useState("");
+  const [salePrice, setSalePrice] = useState("");
+  const [minStock, setMinStock] = useState("");
+
+  async function loadCategories() {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name_ar, prefix")
+      .eq("is_active", true)
+      .order("id", { ascending: true });
+
+    if (error) return alert(error.message);
+    if (data) setCategories(data as Category[]);
+  }
+
+  async function loadProducts() {
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, name_ar, sku, purchase_price, sale_price, min_stock")
+      .order("id", { ascending: false });
+
+    if (error) return alert(error.message);
+    if (data) setProducts(data as Product[]);
+  }
+
+  async function addProduct() {
+    if (!nameAr.trim() || categoryId === "") return alert("أدخل اسم الصنف واختر الفئة");
+
+    const { data: sku, error: skuErr } = await supabase.rpc("generate_sku_for_category", {
+      cat_id: categoryId,
+    });
+    if (skuErr) return alert("خطأ بتوليد الكود: " + skuErr.message);
+
+    const { error } = await supabase.from("products").insert({
+      name_ar: nameAr.trim(),
+      category_id: categoryId,
+      sku,
+      barcode_value: sku,
+      purchase_price: Number(purchasePrice || 0),
+      sale_price: Number(salePrice || 0),
+      min_stock: Number(minStock || 0),
+      is_active: true,
+    });
+
+    if (error) return alert(error.message);
+
+    alert("تمت إضافة الصنف بالكود: " + sku);
+
+    setNameAr("");
+    setPurchasePrice("");
+    setSalePrice("");
+    setMinStock("");
+
+    loadProducts();
+  }
+
+  useEffect(() => {
+    loadCategories();
+    loadProducts();
+  }, []);
+
   return (
     <RequireAuth>
       <div style={{ padding: 20, direction: "rtl" }}>
@@ -12,9 +100,7 @@
 
           <select
             value={categoryId}
-            onChange={(e) =>
-              setCategoryId(e.target.value ? Number(e.target.value) : "")
-            }
+            onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : "")}
           >
             <option value="">اختر الفئة</option>
             {categories.map((c) => (
@@ -70,3 +156,4 @@
       </div>
     </RequireAuth>
   );
+}
