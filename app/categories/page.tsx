@@ -23,7 +23,8 @@ export default function CategoriesPage() {
       .select("*")
       .order("id", { ascending: true });
 
-    if (!error && data) setRows(data as Category[]);
+    if (error) return alert(error.message);
+    if (data) setRows(data as Category[]);
   }
 
   async function addCategory() {
