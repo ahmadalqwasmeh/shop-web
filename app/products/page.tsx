@@ -138,8 +138,9 @@ export default function ProductsPage() {
         />
 
         <button onClick={addProduct}>إضافة صنف</button>
-          <RequireAuth>
+          
       </div>
+      <RequireAuth>
 
       <table style={{ width: "100%", marginTop: 20 }}>
         <thead>
@@ -166,4 +167,5 @@ export default function ProductsPage() {
     </div>
   );
 }
+
 
