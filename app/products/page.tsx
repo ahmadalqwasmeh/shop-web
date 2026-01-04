@@ -222,6 +222,8 @@ export default function ProductsPage() {
                 <td>
                   <button onClick={() => startEdit(p)}>تعديل</button>
                 </td>
+                <button onClick={() => window.open(`/print/barcode/${p.id}`, "_blank")}> طباعة باركود </button>
+
               </tr>
             ))}
           </tbody>
@@ -234,3 +236,4 @@ export default function ProductsPage() {
     </RequireAuth>
   );
 }
+
