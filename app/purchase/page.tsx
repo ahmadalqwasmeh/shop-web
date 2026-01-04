@@ -119,6 +119,8 @@ export default function PurchasePage() {
     if (moveErr) return alert(moveErr.message);
 
     alert("تم حفظ فاتورة الشراء رقم: " + invoiceId);
+window.open(`/print/invoice/${invoiceId}`, "_blank");
+
 
     setLines([]);
     setNotes("");
@@ -218,3 +220,4 @@ export default function PurchasePage() {
     </RequireAuth>
   );
 }
+
