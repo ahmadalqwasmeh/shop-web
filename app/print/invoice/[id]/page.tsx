@@ -17,8 +17,9 @@ type Item = {
   id: number;
   qty: number;
   price: number;
-  product: { name_ar: string; sku: string } | null;
+  product: { name_ar: string; sku: string }[]; // ✅ مصفوفة
 };
+
 
 export default function PrintInvoicePage({ params }: { params: { id: string } }) {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
