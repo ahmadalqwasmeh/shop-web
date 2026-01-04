@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 type Invoice = {
@@ -19,7 +20,11 @@ type Item = {
   product: { name_ar: string; sku: string }[];
 };
 
-export default function PrintInvoicePage({ params }: { params: { id: string } }) {
+export default function PrintInvoicePage({ params }: { params: { id?: string } }) {
+  // ✅ مضمونة: ناخذ id من params أو من الرابط مباشرة
+  const routeParams = useParams<{ id?: string }>();
+  const idStr = String(params?.id ?? routeParams?.id ?? "");
+
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [items, setItems] = useState<Item[]>([]);
 
@@ -30,65 +35,66 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
 
   useEffect(() => {
     async function load() {
-      const invoiceId = Number(params.id);
+      const invoiceId = Number.parseInt(idStr, 10);
+
       if (!Number.isFinite(invoiceId)) {
-        alert("رقم الفاتورة غير صحيح");
+        alert("رقم الفاتورة غير صحيح: " + idStr);
         return;
       }
 
-      const { data: inv } = await supabase
+      const { data: inv, error: invErr } = await supabase
         .from("invoices")
         .select("id, type, total, discount, notes, created_at")
         .eq("id", invoiceId)
         .single();
 
+      if (invErr) return alert(invErr.message);
       if (!inv) return alert("الفاتورة غير موجودة");
-      setInvoice(inv);
 
-      // اسم ملف PDF
+      setInvoice(inv as Invoice);
+
+      // ✅ اسم ملف PDF يكون رقم الفاتورة
       document.title = `فاتورة-${inv.id}`;
 
-      const { data: its } = await supabase
+      const { data: its, error: itsErr } = await supabase
         .from("invoice_items")
         .select("id, qty, price, product:products(name_ar, sku)")
         .eq("invoice_id", invoiceId);
 
-      setItems((its ?? []) as Item[]);
+      if (itsErr) return alert(itsErr.message);
+      setItems((its ?? []) as unknown as Item[]);
 
       setTimeout(() => window.print(), 300);
     }
 
     load();
-  }, [params.id]);
+  }, [idStr]);
 
-  const subtotal = useMemo(
-    () => items.reduce((s, it) => s + it.qty * it.price, 0),
-    [items]
-  );
+  const subtotal = useMemo(() => items.reduce((s, it) => s + it.qty * it.price, 0), [items]);
 
-  if (!invoice) return <div style={{ padding: 20 }}>جاري التحميل...</div>;
+  if (!invoice) return <div style={{ padding: 20 }}>جاري تحميل الفاتورة...</div>;
 
   return (
     <div style={{ padding: 18, fontFamily: "Arial", direction: "rtl" }}>
-      {/* رأس */}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      {/* رأس الفاتورة */}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 800 }}>فاتورة</div>
-          <div style={{ marginTop: 6 }}>{title}</div>
-          <div style={{ fontSize: 12 }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>إدارة المحل</div>
+          <div style={{ marginTop: 6, fontWeight: 700 }}>{title}</div>
+          <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
             التاريخ: {new Date(invoice.created_at).toLocaleString("ar")}
           </div>
         </div>
 
-        <div>
-          <div style={{ fontWeight: 700 }}>رقم الفاتورة</div>
-          <div style={{ fontSize: 20 }}>#{invoice.id}</div>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>رقم الفاتورة</div>
+          <div style={{ fontSize: 22, fontWeight: 900 }}>#{invoice.id}</div>
         </div>
       </div>
 
-      <hr />
+      <hr style={{ margin: "14px 0", border: "none", borderTop: "1px solid #ddd" }} />
 
-      {/* جدول */}
+      {/* جدول الأصناف */}
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
@@ -102,10 +108,10 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
         <tbody>
           {items.map((it) => (
             <tr key={it.id}>
-              <td style={td}>{it.product?.[0]?.sku}</td>
-              <td style={td}>{it.product?.[0]?.name_ar}</td>
+              <td style={td}>{it.product?.[0]?.sku ?? "-"}</td>
+              <td style={td}>{it.product?.[0]?.name_ar ?? "-"}</td>
               <td style={td}>{it.qty}</td>
-              <td style={td}>{it.price.toFixed(3)}</td>
+              <td style={td}>{Number(it.price).toFixed(3)}</td>
               <td style={td}>{(it.qty * it.price).toFixed(3)}</td>
             </tr>
           ))}
@@ -113,37 +119,41 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
       </table>
 
       {/* ملخص */}
-      <div style={{ marginTop: 12 }}>
-        <div>المجموع: {subtotal.toFixed(3)}</div>
-        <div>الخصم: {invoice.discount.toFixed(3)}</div>
-        <b>الإجمالي: {invoice.total.toFixed(3)}</b>
+      <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ width: 320 }}>
+          <div style={sumRow}>
+            <span>المجموع قبل الخصم</span>
+            <b>{subtotal.toFixed(3)}</b>
+          </div>
+          <div style={sumRow}>
+            <span>الخصم</span>
+            <b>{Number(invoice.discount ?? 0).toFixed(3)}</b>
+          </div>
+          <div style={{ ...sumRow, fontSize: 16 }}>
+            <span>الإجمالي النهائي</span>
+            <b>{Number(invoice.total ?? 0).toFixed(3)}</b>
+          </div>
+        </div>
       </div>
 
-      {invoice.notes && (
-        <div style={{ marginTop: 10 }}>
+      {/* ملاحظات */}
+      {invoice.notes ? (
+        <div style={{ marginTop: 12, fontSize: 12, opacity: 0.85 }}>
           <b>ملاحظات:</b> {invoice.notes}
         </div>
-      )}
+      ) : null}
 
-      <div style={{ marginTop: 20, textAlign: "center", fontSize: 12 }}>
+      {/* تذييل */}
+      <div style={{ marginTop: 20, fontSize: 12, opacity: 0.7, textAlign: "center" }}>
         شكرًا لتعاملكم معنا
       </div>
 
-      {/* CSS الطباعة */}
+      {/* ✅ CSS للطباعة: يخفي أي شيء من موقعك لو كان ظاهر */}
       <style>{`
-        @page {
-          size: A4;
-          margin: 12mm;
-        }
-
+        @page { size: A4; margin: 12mm; }
         @media print {
-          body {
-            margin: 0;
-          }
-
-          header, footer, nav {
-            display: none !important;
-          }
+          nav, header, footer, .navbar, .topbar, .no-print { display: none !important; }
+          body { background: white !important; }
         }
       `}</style>
     </div>
@@ -151,13 +161,23 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
 }
 
 const th: React.CSSProperties = {
-  borderBottom: "1px solid #ccc",
-  padding: 6,
+  borderBottom: "1px solid #ddd",
+  padding: 8,
+  textAlign: "right",
   fontSize: 12,
+  background: "#f3f4f6",
 };
 
 const td: React.CSSProperties = {
   borderBottom: "1px solid #eee",
-  padding: 6,
+  padding: 8,
+  textAlign: "right",
   fontSize: 12,
+};
+
+const sumRow: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  padding: "8px 0",
+  borderBottom: "1px dashed #ddd",
 };
