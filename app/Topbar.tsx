@@ -45,6 +45,8 @@ export default function Topbar() {
         <a className="navLink" href="/purchase">شراء</a>
         <a className="navLink" href="/sale">بيع</a>
         <a className="navLink" href="/stock">المخزون</a>
+        <a className="navLink" href="/adjust">تعديل كمية</a>
+
 
         {/* ✅ تغيير النص إلى "تبديل المستخدم" */}
         <a className="navLink" href="/login">تبديل المستخدم</a>
