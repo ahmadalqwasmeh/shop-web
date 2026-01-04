@@ -53,6 +53,19 @@ html, body {
   background: var(--card);
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
+.navBtn {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.navBtn:hover {
+  transform: translateY(-1px);
+}
+
 
 .navLink:hover {
   transform: translateY(-1px);
