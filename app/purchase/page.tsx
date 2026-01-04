@@ -94,8 +94,23 @@ export default function PurchasePage() {
       .select("id")
       .single();
 
-    if (invErr) return alert(invErr.message);
-    const invoiceId = inv.id;
+    if (invErr) {
+  alert("خطأ إنشاء الفاتورة: " + invErr.message);
+  return;
+}
+
+if (!inv || inv.id == null) {
+  alert("لم يتم استلام رقم الفاتورة من قاعدة البيانات");
+  return;
+}
+
+const invoiceId = Number(inv.id);
+
+if (!Number.isFinite(invoiceId)) {
+  alert("رقم الفاتورة غير صحيح: " + String(inv.id));
+  return;
+}
+
 
     const itemsPayload = lines.map((l) => ({
       invoice_id: invoiceId,
@@ -220,4 +235,5 @@ window.open(`/print/invoice/${invoiceId}`, "_blank");
     </RequireAuth>
   );
 }
+
 
