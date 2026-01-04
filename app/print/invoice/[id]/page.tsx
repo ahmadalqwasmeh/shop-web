@@ -32,7 +32,13 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
 
   useEffect(() => {
     async function load() {
-      const invoiceId = Number(params.id);
+      const invoiceId = Number.parseInt(params.id, 10);
+
+if (!Number.isFinite(invoiceId)) {
+  alert("رقم الفاتورة غير صحيح: " + params.id);
+  return;
+}
+
 
       const { data: inv, error: invErr } = await supabase
         .from("invoices")
