@@ -139,6 +139,8 @@ export default function SalePage() {
     if (moveErr) return alert(moveErr.message);
 
     alert("تم حفظ فاتورة البيع رقم: " + invoiceId);
+window.open(`/print/invoice/${invoiceId}`, "_blank");
+
 
     // Reset
     setLines([]);
@@ -282,3 +284,4 @@ export default function SalePage() {
     </RequireAuth>
   );
 }
+
