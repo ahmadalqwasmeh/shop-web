@@ -1,4 +1,5 @@
 import "./globals.css";
+import Topbar from "./Topbar";
 
 export const metadata = {
   title: "إدارة المحل",
@@ -10,18 +11,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl">
       <body>
         <div className="appShell">
-          <header className="topbar">
-            <div className="brand">إدارة المحل</div>
-
-            <nav className="nav">
-              <a className="navLink" href="/categories">الفئات</a>
-              <a className="navLink" href="/products">الأصناف</a>
-              <a className="navLink" href="/purchase">شراء</a>
-              <a className="navLink" href="/sale">بيع</a>
-              <a className="navLink" href="/stock">المخزون</a>
-              <a className="navLink" href="/login">تسجيل الدخول</a>
-            </nav>
-          </header>
+          {/* ✅ الشريط العلوي يظهر فقط بعد تسجيل الدخول */}
+          <Topbar />
 
           <main className="container">{children}</main>
         </div>
