@@ -46,6 +46,8 @@ export default function Topbar() {
         <a className="navLink" href="/sale">بيع</a>
         <a className="navLink" href="/stock">المخزون</a>
         <a className="navLink" href="/adjust">تعديل كمية</a>
+        <a className="navLink" href="/print/barcode-sheet">طباعة باركود</a>
+
 
 
         {/* ✅ تغيير النص إلى "تبديل المستخدم" */}
