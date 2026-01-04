@@ -40,6 +40,7 @@ if (!Number.isFinite(invoiceId)) {
 }
 
 
+
       const { data: inv, error: invErr } = await supabase
         .from("invoices")
         .select("id, type, total, discount, notes, created_at")
