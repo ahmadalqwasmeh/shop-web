@@ -83,6 +83,7 @@ export default function PurchasePage() {
   async function saveInvoice() {
     if (lines.length === 0) return alert("أضف أصناف للفاتورة أولًا");
 
+    // 1) إنشاء الفاتورة
     const { data: inv, error: invErr } = await supabase
       .from("invoices")
       .insert({
@@ -94,24 +95,30 @@ export default function PurchasePage() {
       .select("id")
       .single();
 
+    // 🔎 تشخيص (إذا لسه في مشكلة، هذا السطر رح يبين الحقيقة)
+    // إذا ما بدك التشخيص لاحقًا، احذفه.
+    if (!invErr && (!inv || inv.id == null)) {
+      alert("تشخيص: تم الإدخال لكن لم يرجع id. راجع RLS/Policies على جدول invoices (SELECT).");
+      return;
+    }
+
     if (invErr) {
-  alert("خطأ إنشاء الفاتورة: " + invErr.message);
-  return;
-}
+      alert("خطأ إنشاء الفاتورة: " + invErr.message);
+      return;
+    }
 
-if (!inv || inv.id == null) {
-  alert("لم يتم استلام رقم الفاتورة من قاعدة البيانات");
-  return;
-}
+    if (!inv || inv.id == null) {
+      alert("لم يتم استلام رقم الفاتورة من قاعدة البيانات");
+      return;
+    }
 
-const invoiceId = Number(inv.id);
+    const invoiceId = Number(inv.id);
+    if (!Number.isFinite(invoiceId)) {
+      alert("رقم الفاتورة غير صحيح (inv.id): " + String(inv.id));
+      return;
+    }
 
-if (!Number.isFinite(invoiceId)) {
-  alert("رقم الفاتورة غير صحيح: " + String(inv.id));
-  return;
-}
-
-
+    // 2) إدخال بنود الفاتورة
     const itemsPayload = lines.map((l) => ({
       invoice_id: invoiceId,
       product_id: l.product_id,
@@ -120,8 +127,9 @@ if (!Number.isFinite(invoiceId)) {
     }));
 
     const { error: itemsErr } = await supabase.from("invoice_items").insert(itemsPayload);
-    if (itemsErr) return alert(itemsErr.message);
+    if (itemsErr) return alert("خطأ حفظ البنود: " + itemsErr.message);
 
+    // 3) حركة مخزون IN
     const movesPayload = lines.map((l) => ({
       product_id: l.product_id,
       movement_type: "IN",
@@ -131,11 +139,12 @@ if (!Number.isFinite(invoiceId)) {
     }));
 
     const { error: moveErr } = await supabase.from("stock_movements").insert(movesPayload);
-    if (moveErr) return alert(moveErr.message);
+    if (moveErr) return alert("خطأ حركة المخزون: " + moveErr.message);
 
     alert("تم حفظ فاتورة الشراء رقم: " + invoiceId);
-window.open(`/print/invoice/${invoiceId}`, "_blank");
 
+    // ✅ لا تفتح الطباعة إلا بعد التأكد 100%
+    window.open(`/print/invoice/${invoiceId}`, "_blank");
 
     setLines([]);
     setNotes("");
@@ -217,9 +226,7 @@ window.open(`/print/invoice/${invoiceId}`, "_blank");
           </tbody>
         </table>
 
-        <div style={{ marginTop: 12, fontWeight: "bold" }}>
-          المجموع: {total.toFixed(3)}
-        </div>
+        <div style={{ marginTop: 12, fontWeight: "bold" }}>المجموع: {total.toFixed(3)}</div>
 
         <button
           onClick={saveInvoice}
@@ -235,5 +242,3 @@ window.open(`/print/invoice/${invoiceId}`, "_blank");
     </RequireAuth>
   );
 }
-
-
