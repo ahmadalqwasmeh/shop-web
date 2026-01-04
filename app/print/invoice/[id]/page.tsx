@@ -49,7 +49,8 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
         .eq("invoice_id", invoiceId);
 
       if (itsErr) return alert(itsErr.message);
-      setItems((its ?? []) as Item[]);
+      setItems((its ?? []) as unknown as Item[]);
+
 
       setTimeout(() => window.print(), 300);
     }
@@ -98,8 +99,8 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
           <tbody>
             {items.map((it) => (
               <tr key={it.id}>
-                <td style={td}>{it.product?.sku ?? "-"}</td>
-                <td style={td}>{it.product?.name_ar ?? "-"}</td>
+                <td style={td}>{it.product?.[0]?.sku ?? "-"}</td>
+                <td style={td}>{it.product?.[0]?.name_ar ?? "-"}</td>
                 <td style={td}>{it.qty}</td>
                 <td style={td}>{Number(it.price).toFixed(3)}</td>
                 <td style={td}>{(it.qty * it.price).toFixed(3)}</td>
