@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import RequireAuth from "../RequireAuth";
+import RequireAuth from "../../RequireAuth";
+
 
 type Product = {
   id: number;
