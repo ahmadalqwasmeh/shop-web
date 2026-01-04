@@ -100,20 +100,36 @@ export default function SalePage() {
     if (lines.length === 0) return alert("أضف أصناف للفاتورة أولًا");
 
     // 1) أنشئ الفاتورة (SALE)
-    const { data: inv, error: invErr } = await supabase
-      .from("invoices")
-      .insert({
-        type: "SALE",
-        discount: 0,
-        total,
-        notes: notes || null,
-      })
-      .select("id")
-      .single();
+   const { data: inv, error: invErr } = await supabase
+  .from("invoices")
+  .insert({
+    type: "SALE", // في purchase غيّرها PURCHASE
+    discount: 0,
+    total,
+    notes: notes || null,
+  })
+  .select("id")
+  .single();
 
-    if (invErr) return alert(invErr.message);
+if (invErr) {
+  alert("خطأ إنشاء الفاتورة: " + invErr.message);
+  return;
+}
 
-    const invoiceId = inv.id;
+if (!inv || inv.id == null) {
+  alert("لم يتم استلام رقم الفاتورة من قاعدة البيانات");
+  return;
+}
+
+const invoiceId = Number(inv.id);
+
+if (!Number.isFinite(invoiceId)) {
+  alert("رقم الفاتورة غير صحيح: " + String(inv.id));
+  return;
+}
+
+// ✅ هنا تفتح صفحة الطباعة
+window.open(`/print/invoice/${invoiceId}`, "_blank");
 
     // 2) أضف بنود الفاتورة
     const itemsPayload = lines.map((l) => ({
@@ -284,4 +300,5 @@ window.open(`/print/invoice/${invoiceId}`, "_blank");
     </RequireAuth>
   );
 }
+
 
