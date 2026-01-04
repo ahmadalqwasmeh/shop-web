@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import RequireAuth from "../../../RequireAuth";
 
@@ -17,11 +18,14 @@ type Item = {
   id: number;
   qty: number;
   price: number;
-  product: { name_ar: string; sku: string }[]; // ✅ مصفوفة
+  product: { name_ar: string; sku: string }[]; // Supabase يرجعها Array
 };
 
+export default function PrintInvoicePage({ params }: { params: { id?: string } }) {
+  // ✅ fallback: لو params.id كان undefined ناخذه من الرابط مباشرة
+  const routeParams = useParams<{ id?: string }>();
+  const idStr = String(params?.id ?? routeParams?.id ?? "");
 
-export default function PrintInvoicePage({ params }: { params: { id: string } }) {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [items, setItems] = useState<Item[]>([]);
 
@@ -32,14 +36,12 @@ export default function PrintInvoicePage({ params }: { params: { id: string } })
 
   useEffect(() => {
     async function load() {
-      const invoiceId = Number.parseInt(params.id, 10);
+      const invoiceId = Number.parseInt(idStr, 10);
 
-if (!Number.isFinite(invoiceId)) {
-  alert("رقم الفاتورة غير صحيح: " + params.id);
-  return;
-}
-
-
+      if (!Number.isFinite(invoiceId)) {
+        alert("رقم الفاتورة غير صحيح: " + idStr);
+        return;
+      }
 
       const { data: inv, error: invErr } = await supabase
         .from("invoices")
@@ -58,12 +60,11 @@ if (!Number.isFinite(invoiceId)) {
       if (itsErr) return alert(itsErr.message);
       setItems((its ?? []) as unknown as Item[]);
 
-
       setTimeout(() => window.print(), 300);
     }
 
     load();
-  }, [params.id]);
+  }, [idStr]);
 
   const subtotal = useMemo(() => {
     return items.reduce((s, it) => s + it.qty * it.price, 0);
